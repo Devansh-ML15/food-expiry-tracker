@@ -104,20 +104,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="script.js"></script>
     <script>
-        // API Configuration
-        const API_URL = (() => {
-            // Check if we're in production
-            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                // In production, use the Render backend URL
-                return 'https://food-expiry-tracker-backend.onrender.com';
-            }
-            // In development, use localhost
-            return 'http://localhost:3001';
-        })();
-
-        // Log API URL for debugging
-        console.log('API URL:', API_URL);
-
+        // Initialize Bootstrap tooltips and popovers
         document.addEventListener('DOMContentLoaded', function() {
             // Check if user is logged in
             if (localStorage.getItem('isLoggedIn') !== 'true') {
@@ -151,22 +138,24 @@
             }
         });
 
-        // Handle form submission
+        // Save notification settings
         document.getElementById('notificationSettingsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
             const submitButton = document.querySelector('button[type="submit"]');
             const originalText = submitButton.innerHTML;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-            submitButton.disabled = true;
-
+            
             try {
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                submitButton.disabled = true;
+
                 // Get all checked notification types
                 const types = [];
                 if (document.getElementById('expiringSoon').checked) types.push('expiringSoon');
                 if (document.getElementById('expired').checked) types.push('expired');
                 if (document.getElementById('summary').checked) types.push('summary');
 
-                const response = await fetch(`${API_URL}/send-notifications`, {
+                const response = await fetch('http://localhost:3001/send-notifications', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
