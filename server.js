@@ -12,6 +12,10 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
     process.exit(1);
 }
 
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // CORS configuration
 const corsOptions = {
     origin: 'https://famous-paletas-4d48d3.netlify.app',
@@ -60,12 +64,8 @@ app.options('*', (req, res) => {
     res.status(204).end();
 });
 
-// Middleware
-app.use(express.json());
-
-// Health check endpoint with explicit CORS headers
+// Health check endpoint
 app.get('/health', (req, res) => {
-    // Set CORS headers explicitly
     res.setHeader('Access-Control-Allow-Origin', 'https://famous-paletas-4d48d3.netlify.app');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
