@@ -1,4 +1,14 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// API Configuration
+const API_URL = (() => {
+    // Check if we're in production
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        return import.meta.env.VITE_API_URL || 'https://food-expiry-tracker-backend.onrender.com';
+    }
+    return 'http://localhost:3001';
+})();
+
+// Log API URL for debugging
+console.log('API URL:', API_URL);
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
