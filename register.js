@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('registerForm');
     const togglePassword = document.getElementById('togglePassword');
@@ -37,11 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.disabled = true;
 
             // Send registration request to backend
-            const response = await fetch('http://localhost:3001/api/register', {
+            const response = await fetch(`${API_URL}/api/register`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     fullName,
@@ -51,26 +52,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Registration failed');
+                throw new Error('Registration failed');
             }
 
             const data = await response.json();
-
-            // Show success message
-            showMessage('Registration successful! Redirecting to login...', 'success');
-
-            // Store user data in localStorage
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
-
-            // Redirect to login page
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
-
+            
+            if (data.success) {
+                showMessage('Registration successful! Redirecting to login...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } else {
+                throw new Error(data.message || 'Registration failed');
+            }
         } catch (error) {
-            console.error('Registration error:', error);
-            showMessage(error.message || 'An error occurred. Please try again.', 'error');
+            console.error('Error:', error);
+            showMessage(error.message || 'An error occurred during registration', 'error');
         } finally {
             // Reset button state
             submitButton.innerHTML = originalButtonText;

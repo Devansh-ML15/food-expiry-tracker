@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const togglePassword = document.getElementById('togglePassword');
@@ -15,59 +17,44 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('email').value;
-        const password = passwordInput.value;
-        const remember = document.getElementById('remember').checked;
+        const submitButton = document.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
 
         try {
-            // Show loading state
-            const submitButton = document.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
             submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...';
             submitButton.disabled = true;
 
-            // Send login request to backend
-            const response = await fetch('http://localhost:3001/api/login', {
+            const response = await fetch(`${API_URL}/api/login`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    email,
-                    password
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
                 })
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Login failed');
+                throw new Error('Login failed');
             }
 
             const data = await response.json();
-
-            // Store login state
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
-
-            if (remember) {
-                localStorage.setItem('rememberedEmail', email);
-            }
-
-            // Show success message
-            showMessage('Login successful! Redirecting...', 'success');
-
-            // Redirect to main page
-            setTimeout(() => {
+            
+            if (data.success) {
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('isLoggedIn', 'true');
+                
+                // Redirect to main page
                 window.location.href = 'index.html';
-            }, 1500);
-
+            } else {
+                throw new Error(data.message || 'Login failed');
+            }
         } catch (error) {
-            console.error('Login error:', error);
-            showMessage(error.message || 'An error occurred. Please try again.', 'error');
+            console.error('Error:', error);
+            showNotification(error.message || 'An error occurred during login', 'error');
         } finally {
-            // Reset button state
-            const submitButton = document.querySelector('button[type="submit"]');
             submitButton.innerHTML = originalText;
             submitButton.disabled = false;
         }

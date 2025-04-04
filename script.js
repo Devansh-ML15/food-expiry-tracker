@@ -1051,3 +1051,26 @@ function checkAuth() {
 
 // Run auth check when page loads
 checkAuth();
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+// Update all fetch calls to use API_URL
+async function sendNotificationSettings() {
+    try {
+        const response = await fetch(`${API_URL}/send-notifications`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: document.getElementById('email').value,
+                foodItems: JSON.parse(localStorage.getItem('foodItems') || '[]'),
+                types: getSelectedNotificationTypes()
+            })
+        });
+        // ... rest of the function
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Failed to save settings', 'error');
+    }
+}
