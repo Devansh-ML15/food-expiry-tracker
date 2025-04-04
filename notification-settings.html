@@ -32,51 +32,64 @@
                 </div>
             </header>
 
-            <!-- Notification Settings Form -->
-            <div class="notification-settings-container">
-                <div class="card">
-                    <div class="card-body">
-                        <h3>Email Notification Preferences</h3>
-                        <p class="text-muted">Choose when you want to receive email notifications about expiring items. All times are in Mountain Standard Time (MST).</p>
-                        
-                        <form id="notificationForm" class="mt-4">
-                            <div class="mb-4">
-                                <label class="form-label">Notification Time (MST)</label>
-                                <select class="form-select" id="notificationTime">
-                                    <option value="07:00">7:00 AM MST</option>
-                                    <option value="08:00">8:00 AM MST</option>
-                                    <option value="09:00">9:00 AM MST</option>
-                                    <option value="10:00">10:00 AM MST</option>
-                                    <option value="11:00">11:00 AM MST</option>
-                                    <option value="12:00">12:00 PM MST</option>
-                                    <option value="13:00">1:00 PM MST</option>
-                                    <option value="14:00">2:00 PM MST</option>
-                                    <option value="15:00">3:00 PM MST</option>
-                                    <option value="16:00">4:00 PM MST</option>
-                                    <option value="17:00">5:00 PM MST</option>
-                                    <option value="18:00">6:00 PM MST</option>
-                                </select>
-                                <div class="form-text">Select the time you'd like to receive daily notifications.</div>
+            <!-- Notification Settings Content -->
+            <div class="settings-container">
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <i class="bi bi-bell"></i>
+                        <h3>Email Notifications</h3>
+                    </div>
+                    <div class="settings-card-body">
+                        <form id="notificationSettingsForm">
+                            <div class="form-group mb-4">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       placeholder="Enter your email address"
+                                       required>
+                                <div class="form-text">We'll send notifications to this email address</div>
+                                <div id="nextNotificationTime" class="form-text mt-2" style="font-weight: 500;"></div>
                             </div>
 
-                            <div class="mb-4">
-                                <label class="form-label">Email Address</label>
-                                <input type="email" class="form-control" id="emailAddress" required>
-                                <div class="form-text">We'll send notifications to this email address.</div>
-                            </div>
-
-                            <div class="mb-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="enableNotifications" checked>
-                                    <label class="form-check-label" for="enableNotifications">
-                                        Enable email notifications
-                                    </label>
+                            <div class="form-group mb-4">
+                                <label class="form-label">Notification Types</label>
+                                <div class="notification-types">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="expiringSoon" 
+                                               checked>
+                                        <label class="form-check-label" for="expiringSoon">
+                                            Items Expiring Soon
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="expired" 
+                                               checked>
+                                        <label class="form-check-label" for="expired">
+                                            Expired Items
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="summary" 
+                                               checked>
+                                        <label class="form-check-label" for="summary">
+                                            Weekly Summary
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Save Settings
-                            </button>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Save Settings
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -90,6 +103,25 @@
     <script>
         // Initialize Bootstrap tooltips and popovers
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in
+            if (localStorage.getItem('isLoggedIn') !== 'true') {
+                window.location.href = 'login.html';
+            }
+
+            // Load saved notification settings
+            const savedSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+            
+            if (savedSettings.email) {
+                document.getElementById('email').value = savedSettings.email;
+            }
+            
+            if (savedSettings.types) {
+                savedSettings.types.forEach(type => {
+                    document.getElementById(type).checked = true;
+                });
+            }
+
+            // Initialize Bootstrap components
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -99,59 +131,87 @@
             var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
                 return new bootstrap.Popover(popoverTriggerEl);
             });
+
+            // Load saved notification time on page load
+            if (savedSettings.nextNotificationTime) {
+                const nextTime = new Date(savedSettings.nextNotificationTime);
+                document.getElementById('nextNotificationTime').textContent = 
+                    `Next notification scheduled for: ${nextTime.toLocaleString()}`;
+            }
         });
 
-        // Load saved notification time on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const notificationForm = document.getElementById('notificationForm');
-            const notificationTime = document.getElementById('notificationTime');
-            const emailAddress = document.getElementById('emailAddress');
-            const enableNotifications = document.getElementById('enableNotifications');
+        // Save notification settings
+        document.getElementById('notificationSettingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitButton = document.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            try {
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                submitButton.disabled = true;
 
-            // Load saved settings
-            fetch(`${API_URL}/api/notification-settings`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.time) notificationTime.value = data.time;
-                if (data.email) emailAddress.value = data.email;
-                if (data.enabled !== undefined) enableNotifications.checked = data.enabled;
-            })
-            .catch(error => {
-                console.error('Error loading notification settings:', error);
-            });
+                // Get all checked notification types
+                const types = [];
+                if (document.getElementById('expiringSoon').checked) types.push('expiringSoon');
+                if (document.getElementById('expired').checked) types.push('expired');
+                if (document.getElementById('summary').checked) types.push('summary');
 
-            // Save notification settings
-            notificationForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const settings = {
-                    time: notificationTime.value,
-                    email: emailAddress.value,
-                    enabled: enableNotifications.checked
-                };
-
-                fetch(`${API_URL}/api/notification-settings`, {
+                const response = await fetch(`${API_URL}/send-notifications`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(settings)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert('Notification settings saved successfully!');
-                })
-                .catch(error => {
-                    console.error('Error saving notification settings:', error);
-                    alert('Error saving notification settings. Please try again.');
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        foodItems: JSON.parse(localStorage.getItem('foodItems') || '[]'),
+                        types: types
+                    })
                 });
-            });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save notification settings');
+                }
+
+                const data = await response.json();
+                
+                // Save settings to localStorage
+                const settings = {
+                    email: document.getElementById('email').value,
+                    types: types,
+                    nextNotificationTime: data.nextNotificationTime
+                };
+                localStorage.setItem('notificationSettings', JSON.stringify(settings));
+                
+                // Show success message
+                showNotification('Notification settings saved successfully!', 'success');
+                
+                // Update next notification time display
+                const nextTimeElement = document.getElementById('nextNotificationTime');
+                if (nextTimeElement) {
+                    const nextTime = new Date(data.nextNotificationTime);
+                    nextTimeElement.textContent = `Next notification scheduled for: ${nextTime.toLocaleString()}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification(error.message || 'An error occurred while saving settings', 'error');
+            } finally {
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
         });
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
     </script>
 
     <style>

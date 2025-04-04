@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             category: document.getElementById('foodCategory').value,
             expiryDate: document.getElementById('expiryDate').value,
             quantity: document.getElementById('quantity').value,
-            addedDate: new Date().toISOString()
+            addedDate: new Date().toISOString().split('T')[0]
         };
         
         addFoodItem(foodItem);
@@ -204,9 +204,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function getDaysUntilExpiry(expiryDate) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const expiry = new Date(expiryDate + 'T00:00:00'); // Ensure midnight in local timezone
-        const diffTime = expiry.getTime() - today.getTime();
-        return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const expiry = new Date(expiryDate + 'T00:00:00');
+        const diffTime = expiry - today;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
     
     function getExpiryClass(days) {
@@ -232,7 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        const date = new Date(dateString + 'T00:00:00');
+        return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
