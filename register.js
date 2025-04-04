@@ -15,11 +15,23 @@ console.log('API URL:', API_URL);
 // Test backend connection
 async function testBackendConnection() {
     try {
-        const response = await fetch(`${API_URL}/health`);
+        const response = await fetch(`${API_URL}/health`, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
         if (!response.ok) {
             console.error('Backend is not responding:', response.status);
             return false;
         }
+        
+        const data = await response.json();
+        console.log('Backend health check response:', data);
         return true;
     } catch (error) {
         console.error('Error connecting to backend:', error);
