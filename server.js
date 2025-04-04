@@ -12,12 +12,18 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
     process.exit(1);
 }
 
-// Middleware
+// CORS configuration
 app.use(cors({
-    origin: ['https://famous-paletas-4d48d3.netlify.app', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: ['https://famous-paletas-4d48d3.netlify.app', 'http://localhost:3000', 'http://localhost:3001'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true
 }));
+
+// Handle preflight requests
+app.options('*', cors());
+
+// Middleware
 app.use(express.json());
 
 // Health check endpoint
