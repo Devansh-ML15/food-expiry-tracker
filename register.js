@@ -28,17 +28,35 @@ async function testBackendConnection() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Test backend connection on page load
-    const isBackendAvailable = await testBackendConnection();
-    if (!isBackendAvailable) {
-        showMessage('Unable to connect to the server. Please try again later.', 'error');
-    }
-
     const registerForm = document.getElementById('registerForm');
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     let originalButtonText = ''; // Store the original button text
+
+    function showMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} mt-3`;
+        messageDiv.textContent = message;
+        
+        // Remove any existing messages
+        const existingMessages = document.querySelectorAll('.alert');
+        existingMessages.forEach(msg => msg.remove());
+        
+        // Insert new message after the form
+        registerForm.parentNode.insertBefore(messageDiv, registerForm.nextSibling);
+        
+        // Auto-remove message after 5 seconds
+        setTimeout(() => {
+            messageDiv.remove();
+        }, 5000);
+    }
+
+    // Test backend connection on page load
+    const isBackendAvailable = await testBackendConnection();
+    if (!isBackendAvailable) {
+        showMessage('Unable to connect to the server. Please try again later.', 'error');
+    }
 
     // Toggle password visibility
     togglePassword.addEventListener('click', () => {
@@ -114,22 +132,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             submitButton.disabled = false;
         }
     });
-
-    function showMessage(message, type) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} mt-3`;
-        messageDiv.textContent = message;
-        
-        // Remove any existing messages
-        const existingMessages = document.querySelectorAll('.alert');
-        existingMessages.forEach(msg => msg.remove());
-        
-        // Insert new message after the form
-        registerForm.parentNode.insertBefore(messageDiv, registerForm.nextSibling);
-        
-        // Auto-remove message after 5 seconds
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 5000);
-    }
 }); 
