@@ -265,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Notification Management
     function initializeNotifications() {
         const notificationsList = document.querySelector('.notifications-list');
-        const markAllReadBtn = document.getElementById('markAllRead');
         const filterButtons = document.querySelectorAll('.notification-filters button');
 
         // Load and display notifications
@@ -280,9 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Mark all as read listener
+        // Remove mark all as read button
+        const markAllReadBtn = document.getElementById('markAllRead');
         if (markAllReadBtn) {
-            markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
+            markAllReadBtn.remove();
         }
     }
 
@@ -346,6 +346,15 @@ document.addEventListener('DOMContentLoaded', () => {
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             .map(notification => createNotificationElement(notification))
             .join('');
+
+        // Add green dot to notification icon if there are unread notifications
+        const unreadCount = notifications.filter(n => n.unread).length;
+        const notificationIcon = document.querySelector('.nav-links li[data-section="notifications"] i');
+        if (unreadCount > 0) {
+            notificationIcon.classList.add('has-unread');
+        } else {
+            notificationIcon.classList.remove('has-unread');
+        }
     }
 
     function createNotificationElement(notification) {
@@ -411,14 +420,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function markAllNotificationsAsRead() {
-        const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-        notifications.forEach(notification => notification.unread = false);
-        localStorage.setItem('notifications', JSON.stringify(notifications));
-        displayNotifications(notifications);
-        updateNotificationBadge();
-    }
-
     function filterNotifications(filterType) {
         const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
         let filteredNotifications;
@@ -463,274 +464,31 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.reload();
     });
 
-    // Notifications functionality
-    const markAllReadBtn = document.getElementById('markAllRead');
-    if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
-    }
-
-    // Load notification states when page loads
-    loadNotificationStates();
-
-    function markAllNotificationsAsRead() {
-        // Get all notifications
-        const notifications = document.querySelectorAll('.notification-item');
-        
-        // Mark each as read
-        notifications.forEach(notification => {
-            notification.classList.remove('unread');
-            // Add 'read' class if you want to style read notifications differently
-            notification.classList.add('read');
-        });
-
-        // Save the state to localStorage
-        saveNotificationStates();
-
-        // Update the notification badge
-        updateNotificationBadge();
-
-        // Change button appearance
-        const markAllReadBtn = document.getElementById('markAllRead');
-        markAllReadBtn.classList.add('disabled');
-        markAllReadBtn.textContent = 'All Read';
-    }
-
-    function saveNotificationStates() {
-        // Get all notifications and their read/unread states
-        const notifications = document.querySelectorAll('.notification-item');
-        const states = {};
-        
-        notifications.forEach(notification => {
-            // Using a data attribute or ID to uniquely identify notifications
-            const notificationId = notification.dataset.notificationId;
-            states[notificationId] = {
-                isRead: notification.classList.contains('read')
-            };
-        });
-
-        // Save to localStorage
-        localStorage.setItem('notificationStates', JSON.stringify(states));
-    }
-
-    function loadNotificationStates() {
-        // Get saved states from localStorage
-        const savedStates = JSON.parse(localStorage.getItem('notificationStates') || '{}');
-        
-        // Apply saved states to notifications
-        const notifications = document.querySelectorAll('.notification-item');
-        let hasUnread = false;
-
-        notifications.forEach(notification => {
-            const notificationId = notification.dataset.notificationId;
-            if (savedStates[notificationId]?.isRead) {
-                notification.classList.remove('unread');
-                notification.classList.add('read');
-            } else {
-                hasUnread = true;
+    // Add event listener to remove green dot when notifications page is visited
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (link.dataset.section === 'notifications') {
+                const notificationIcon = document.querySelector('.nav-links li[data-section="notifications"] i');
+                notificationIcon.classList.remove('has-unread');
             }
-        });
-
-        // Update button state
-        const markAllReadBtn = document.getElementById('markAllRead');
-        if (!hasUnread && markAllReadBtn) {
-            markAllReadBtn.classList.add('disabled');
-            markAllReadBtn.textContent = 'All Read';
-        }
-
-        // Update notification badge
-        updateNotificationBadge();
-    }
-
-    function updateNotificationBadge() {
-        const unreadCount = document.querySelectorAll('.notification-item.unread').length;
-        const badge = document.querySelector('.nav-links li[data-section="notifications"] .badge');
-        
-        if (unreadCount > 0) {
-            badge.textContent = unreadCount;
-            badge.style.display = 'inline-block';
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-
-    // Category Filter Functionality
-    const categoryFilter = document.querySelector('.section-actions .form-select');
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', filterByCategory);
-    }
-
-    function filterByCategory(event) {
-        const selectedCategory = event.target.value;
-        const foodItems = document.querySelectorAll('.food-item');
-        const noItemsMessage = document.getElementById('noItemsMessage');
-
-        let visibleItems = 0;
-
-        foodItems.forEach(item => {
-            const itemCategory = item.querySelector('.category').textContent.trim().replace('Category: ', '');
-            
-            if (selectedCategory === 'All Categories' || 
-                itemCategory === selectedCategory || 
-                itemCategory.includes(selectedCategory)) {
-                item.style.display = 'flex';
-                visibleItems++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        // Show/hide no items message
-        if (visibleItems === 0) {
-            if (!noItemsMessage) {
-                const message = document.createElement('div');
-                message.id = 'noItemsMessage';
-                message.className = 'text-center text-muted py-4';
-                message.innerHTML = `
-                    <i class="bi bi-inbox fs-1"></i>
-                    <p class="mt-2">No items found in ${selectedCategory}</p>
-                    <button class="btn btn-primary btn-sm mt-2" onclick="document.getElementById('addItemBtn').click()">
-                        <i class="bi bi-plus-lg"></i> Add ${selectedCategory} Item
-                    </button>
-                `;
-                document.getElementById('foodList').appendChild(message);
-            }
-        } else if (noItemsMessage) {
-            noItemsMessage.remove();
-        }
-
-        // Update summary cards
-        updateFilteredStats(foodItems, selectedCategory);
-    }
-
-    function updateFilteredStats(foodItems, selectedCategory) {
-        let totalItems = 0;
-        let expiringSoon = 0;
-        let expired = 0;
-
-        foodItems.forEach(item => {
-            const itemCategory = item.querySelector('.category').textContent.trim().replace('Category: ', '');
-            if (selectedCategory === 'All Categories' || itemCategory === selectedCategory) {
-                totalItems++;
-                
-                const expiryText = item.querySelector('.badge').textContent.trim();
-                if (expiryText.includes('Expired')) {
-                    expired++;
-                } else if (expiryText.includes('Expires today') || 
-                          expiryText.includes('1 day left') ||
-                          (expiryText.includes('days left') && parseInt(expiryText) <= 7)) {
-                    expiringSoon++;
-                }
-            }
-        });
-
-        // Update stat cards
-        document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = totalItems;
-        document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = expiringSoon;
-        document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = expired;
-    }
-
-    // Add animation for filtered items
-    const filterAnimation = `
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    `;
-
-    // Add the animation style to the document
-    const styleSheet = document.createElement("style");
-    styleSheet.textContent = filterAnimation;
-    document.head.appendChild(styleSheet);
-
-    // Add this CSS class
-    const style = document.createElement('style');
-    style.textContent = `
-        .food-item {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Initialize the filter with "All Categories" selected
-    if (categoryFilter) {
-        filterByCategory({ target: { value: 'All Categories' } });
-    }
-
-    // Add filter buttons event listeners
-    const filterButtons = document.querySelectorAll('.items-filter button');
-    filterButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            // Remove active class from all buttons
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            
-            // Add active class to clicked button
-            e.target.classList.add('active');
-            
-            // Apply the filter
-            filterFoodItems(e.target.textContent.trim());
         });
     });
 
-    function filterFoodItems(filterType) {
-        const foodItems = document.querySelectorAll('.food-item');
-        let visibleItems = 0;
-
-        foodItems.forEach(item => {
-            const expiryText = item.querySelector('.badge').textContent;
-            let shouldShow = false;
-            
-            if (filterType === 'All') {
-                // Show all items when "All" is selected
-                shouldShow = true;
-            } else if (filterType === 'Expired') {
-                // Show only expired items
-                shouldShow = expiryText.includes('Expired');
-            } else if (filterType === 'Expiring Soon') {
-                // Show items expiring today, tomorrow, or within 7 days
-                shouldShow = expiryText.includes('Expires today') || 
-                            expiryText.includes('1 day left') ||
-                            (expiryText.includes('days left') && parseInt(expiryText) <= 7);
-            }
-
-            // Show or hide items with animation
-            if (shouldShow) {
-                item.style.display = 'flex';
-                item.style.animation = 'fadeIn 0.5s ease-out';
-                visibleItems++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        // Show/hide no items message
-        updateNoItemsMessage(visibleItems, filterType);
-    }
-
-    function updateNoItemsMessage(visibleItems, filterType) {
-        const foodList = document.getElementById('foodList');
-        let existingMessage = document.getElementById('noItemsMessage');
-
-        if (visibleItems === 0) {
-            if (!existingMessage) {
-                const message = document.createElement('div');
-                message.id = 'noItemsMessage';
-                message.className = 'text-center text-muted py-4';
-                message.innerHTML = `
-                    <i class="bi bi-inbox fs-1"></i>
-                    <p class="mt-2">No ${filterType.toLowerCase()} items found</p>
-                `;
-                foodList.appendChild(message);
-            }
-        } else if (existingMessage) {
-            existingMessage.remove();
+    // Add CSS for green dot
+    const style = document.createElement('style');
+    style.textContent = `
+        .nav-links li[data-section="notifications"] i.has-unread::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background-color: green;
+            border-radius: 50%;
         }
-    }
+    `;
+    document.head.appendChild(style);
 
     // Add this to your existing DOMContentLoaded event listener
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
