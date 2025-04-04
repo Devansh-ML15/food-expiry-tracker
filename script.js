@@ -998,44 +998,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.style.overflow = '';
         }
     });
-
-    // Theme Toggle Functionality
-    const themeToggle = document.getElementById('themeToggle');
-    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-
-    // Function to set theme
-    function setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-    }
-
-    // Initialize theme
-    function initializeTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme);
-            themeToggle.checked = savedTheme === 'dark';
-        } else {
-            setTheme(prefersDarkScheme.matches ? 'dark' : 'light');
-            themeToggle.checked = prefersDarkScheme.matches;
-        }
-    }
-
-    // Theme toggle event listener
-    themeToggle.addEventListener('change', (e) => {
-        setTheme(e.target.checked ? 'dark' : 'light');
-    });
-
-    // Listen for system theme changes
-    prefersDarkScheme.addEventListener('change', (e) => {
-        if (!localStorage.getItem('theme')) {
-            setTheme(e.matches ? 'dark' : 'light');
-            themeToggle.checked = e.matches;
-        }
-    });
-
-    // Initialize theme on page load
-    document.addEventListener('DOMContentLoaded', initializeTheme);
 });
 
 // Global function for removing items
