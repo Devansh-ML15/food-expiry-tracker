@@ -279,11 +279,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Remove mark all as read button
-        const markAllReadBtn = document.getElementById('markAllRead');
-        if (markAllReadBtn) {
-            markAllReadBtn.remove();
-        }
+        // Add Delete All Notifications button
+        const deleteAllBtn = document.createElement('button');
+        deleteAllBtn.className = 'btn btn-outline-danger';
+        deleteAllBtn.textContent = 'Delete All Notifications';
+        deleteAllBtn.addEventListener('click', deleteAllNotifications);
+        notificationsList.parentElement.insertBefore(deleteAllBtn, notificationsList);
     }
 
     function loadNotifications() {
@@ -446,6 +447,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 badge.style.display = 'none';
             }
         }
+    }
+
+    function deleteAllNotifications() {
+        // Clear notifications from localStorage
+        localStorage.removeItem('notifications');
+        
+        // Clear notifications list in the UI
+        const notificationsList = document.querySelector('.notifications-list');
+        notificationsList.innerHTML = `
+            <div class="notifications-empty">
+                <i class="bi bi-bell-slash"></i>
+                <p>No notifications to display</p>
+            </div>
+        `;
+
+        // Update notification badge
+        updateNotificationBadge();
     }
 
     // Initialize notifications when the page loads
