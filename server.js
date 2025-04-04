@@ -14,22 +14,7 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
 
 // CORS configuration
 const corsOptions = {
-    origin: function (origin, callback) {
-        const allowedOrigins = [
-            'https://famous-paletas-4d48d3.netlify.app',
-            'http://localhost:3000',
-            'http://localhost:3001'
-        ];
-        
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: 'https://famous-paletas-4d48d3.netlify.app',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
@@ -65,8 +50,15 @@ app.use((req, res, next) => {
     next();
 });
 
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', 'https://famous-paletas-4d48d3.netlify.app');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    res.status(204).end();
+});
 
 // Middleware
 app.use(express.json());

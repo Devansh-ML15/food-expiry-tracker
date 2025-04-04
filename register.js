@@ -21,7 +21,8 @@ async function testBackendConnection() {
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Origin': 'https://famous-paletas-4d48d3.netlify.app'
             }
         });
         
