@@ -204,10 +204,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function getDaysUntilExpiry(expiryDate) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const expiry = new Date(expiryDate);
-        expiry.setHours(0, 0, 0, 0);
-        const diffTime = expiry - today;
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const expiry = new Date(expiryDate + 'T00:00:00'); // Ensure midnight in local timezone
+        const diffTime = expiry.getTime() - today.getTime();
+        return Math.floor(diffTime / (1000 * 60 * 60 * 24));
     }
     
     function getExpiryClass(days) {
