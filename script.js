@@ -1,7 +1,24 @@
+// API Configuration
+const API_URL = (() => {
+    // Check if we're in production
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // In production, use the Render backend URL
+        return 'https://food-expiry-tracker-backend.onrender.com';
+    }
+    // In development, use localhost
+    return 'http://localhost:3001';
+})();
+
+// Log API URL for debugging
+console.log('API URL:', API_URL);
+
 // script.js
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize Bootstrap components
-    const addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
+    const addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
     
     // Navigation
     const navLinks = document.querySelectorAll('.nav-links li');
@@ -1051,20 +1068,6 @@ function checkAuth() {
 
 // Run auth check when page loads
 checkAuth();
-
-// API Configuration
-const API_URL = (() => {
-    // Check if we're in production
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        // In production, use the Render backend URL
-        return 'https://food-expiry-tracker-backend.onrender.com';
-    }
-    // In development, use localhost
-    return 'http://localhost:3001';
-})();
-
-// Log API URL for debugging
-console.log('API URL:', API_URL);
 
 // Update all fetch calls to use API_URL
 async function sendNotificationSettings() {
