@@ -102,7 +102,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="script.js"></script>
+    <script src="script.js"></script>
     <script>
         // Initialize Bootstrap tooltips and popovers
         document.addEventListener('DOMContentLoaded', function() {
@@ -138,6 +138,20 @@
             }
         });
 
+        // API Configuration
+        const API_URL = (() => {
+            // Check if we're in production
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                // In production, use the Render backend URL
+                return 'https://food-expiry-tracker-backend.onrender.com';
+            }
+            // In development, use localhost
+            return 'http://localhost:3001';
+        })();
+
+        // Log API URL for debugging
+        console.log('API URL:', API_URL);
+
         // Save notification settings
         document.getElementById('notificationSettingsForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -155,7 +169,7 @@
                 if (document.getElementById('expired').checked) types.push('expired');
                 if (document.getElementById('summary').checked) types.push('summary');
 
-                const response = await fetch('http://localhost:3001/send-notifications', {
+                const response = await fetch(`${API_URL}/send-notifications`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
