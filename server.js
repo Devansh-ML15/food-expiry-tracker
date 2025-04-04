@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 
 // Check for required environment variables
@@ -12,19 +14,44 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*', // Allow specific frontend URL in production
+    origin: '*', // Allow all origins in development, can be restricted in production
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Basic health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static('public'));
 }
 
-// Store users (in a real app, this would be a database)
+// File-based storage for users
+const USERS_FILE = path.join(__dirname, 'users.json');
+
+// Initialize users array from file or create empty array
 let users = [];
+try {
+    if (fs.existsSync(USERS_FILE)) {
+        users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    }
+} catch (error) {
+    console.error('Error reading users file:', error);
+    users = [];
+}
+
+// Function to save users to file
+function saveUsers() {
+    try {
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    } catch (error) {
+        console.error('Error saving users file:', error);
+    }
+}
 
 // Registration endpoint
 app.post('/api/register', (req, res) => {
@@ -55,8 +82,9 @@ app.post('/api/register', (req, res) => {
             password // In a real app, you would hash the password
         };
 
-        // Add user to the list
+        // Add user to the list and save
         users.push(newUser);
+        saveUsers();
 
         // Return success response
         return res.status(201).json({
@@ -100,7 +128,7 @@ app.post('/api/login', (req, res) => {
             });
         }
 
-        // Return success response with user data (excluding password)
+        // Return success response
         return res.json({
             success: true,
             message: 'Login successful',

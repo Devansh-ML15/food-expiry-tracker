@@ -1056,8 +1056,10 @@ checkAuth();
 const API_URL = (() => {
     // Check if we're in production
     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        return import.meta.env.VITE_API_URL || 'https://food-expiry-tracker-backend.onrender.com';
+        // In production, use the Render backend URL
+        return 'https://food-expiry-tracker-backend.onrender.com';
     }
+    // In development, use localhost
     return 'http://localhost:3001';
 })();
 
