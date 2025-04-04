@@ -279,12 +279,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Add Delete All Notifications button
+        // Reposition Delete All Notifications button beside System Notifications
+        const systemButton = document.querySelector('.notification-filters button[data-filter="system"]');
         const deleteAllBtn = document.createElement('button');
         deleteAllBtn.className = 'btn btn-outline-danger';
         deleteAllBtn.textContent = 'Delete All Notifications';
         deleteAllBtn.addEventListener('click', deleteAllNotifications);
-        notificationsList.parentElement.insertBefore(deleteAllBtn, notificationsList);
+        systemButton.parentElement.insertBefore(deleteAllBtn, systemButton.nextSibling);
     }
 
     function loadNotifications() {
@@ -299,23 +300,13 @@ document.addEventListener('DOMContentLoaded', () => {
             expiryDate.setHours(0, 0, 0, 0);
             const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
 
-            if (daysUntilExpiry <= 0) {
-                notifications.push({
-                    id: `expired-${item.id}`,
-                    type: 'expired',
-                    title: 'Item Expired',
-                    message: `${item.name} has expired${daysUntilExpiry === 0 ? ' today' : ''}.`,
-                    icon: 'bi-exclamation-circle',
-                    timestamp: new Date().toISOString(),
-                    unread: true
-                });
-            } else if (daysUntilExpiry <= 2) {
+            if (daysUntilExpiry <= 0 || daysUntilExpiry <= 2) {
                 notifications.push({
                     id: `expiring-${item.id}`,
-                    type: 'expiring',
-                    title: 'Expiring Soon',
-                    message: `${item.name} will expire in ${daysUntilExpiry} day${daysUntilExpiry === 1 ? '' : 's'}.`,
-                    icon: 'bi-clock',
+                    type: daysUntilExpiry <= 0 ? 'expired' : 'expiring',
+                    title: daysUntilExpiry <= 0 ? 'Item Expired' : 'Expiring Soon',
+                    message: `${item.name} ${daysUntilExpiry <= 0 ? 'has expired' : `will expire in ${daysUntilExpiry} day${daysUntilExpiry === 1 ? '' : 's'}`}.`,
+                    icon: daysUntilExpiry <= 0 ? 'bi-exclamation-circle' : 'bi-clock',
                     timestamp: new Date().toISOString(),
                     unread: true
                 });
@@ -370,12 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="notification-message">${notification.message}</div>
                     <div class="notification-meta">
                         <span>${formatNotificationDate(notification.timestamp)}</span>
-                        ${notification.unread ? `
-                            <button class="btn btn-sm btn-outline-primary mark-read-btn" 
-                                    onclick="markNotificationAsRead('${notification.id}')">
-                                Mark as read
-                            </button>
-                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -464,6 +449,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update notification badge
         updateNotificationBadge();
+
+        // Reload notifications for new items only
+        loadNotifications();
     }
 
     // Initialize notifications when the page loads
