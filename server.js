@@ -14,14 +14,7 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
 
 // CORS configuration
 const corsOptions = {
-    origin: function (origin, callback) {
-        const allowedOrigins = ['https://famous-paletas-4d48d3.netlify.app', 'http://localhost:3000', 'http://localhost:3001'];
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: '*', // Allow all origins
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
@@ -43,7 +36,7 @@ app.use(express.json());
 // Health check endpoint
 app.get('/health', (req, res) => {
     // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || 'https://famous-paletas-4d48d3.netlify.app');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
