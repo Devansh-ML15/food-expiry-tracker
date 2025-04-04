@@ -13,21 +13,30 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
 }
 
 // CORS configuration
-app.use(cors({
+const corsOptions = {
     origin: ['https://famous-paletas-4d48d3.netlify.app', 'http://localhost:3000', 'http://localhost:3001'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    credentials: true
-}));
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
 // Handle preflight requests
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 // Middleware
 app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', 'https://famous-paletas-4d48d3.netlify.app');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({ status: 'ok', message: 'Server is running' });
 });
 
