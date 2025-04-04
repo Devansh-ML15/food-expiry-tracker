@@ -288,6 +288,29 @@ document.addEventListener('DOMContentLoaded', () => {
         systemButton.parentElement.insertBefore(deleteAllBtn, systemButton.nextSibling);
     }
 
+    function deleteAllNotifications() {
+        // Clear notifications from localStorage
+        localStorage.removeItem('notifications');
+        
+        // Clear notifications list in the UI
+        const notificationsList = document.querySelector('.notifications-list');
+        notificationsList.innerHTML = `
+            <div class="notifications-empty">
+                <i class="bi bi-bell-slash"></i>
+                <p>No notifications to display</p>
+            </div>
+        `;
+
+        // Update notification badge
+        updateNotificationBadge();
+
+        // Store the current time as the last cleared time
+        localStorage.setItem('lastClearedTime', new Date().toISOString());
+
+        // Reload notifications for new items only
+        loadNotifications();
+    }
+
     function loadNotifications() {
         // Get food items and generate notifications
         const foodItems = JSON.parse(localStorage.getItem('foodItems') || '[]');
@@ -295,12 +318,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
+        // Get the last cleared time
+        const lastClearedTime = new Date(localStorage.getItem('lastClearedTime') || 0);
+
         foodItems.forEach(item => {
             const expiryDate = new Date(item.expiryDate);
             expiryDate.setHours(0, 0, 0, 0);
             const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
 
-            if (daysUntilExpiry <= 0 || daysUntilExpiry <= 2) {
+            // Only generate notifications for items added after the last cleared time
+            if (new Date(item.addedDate) > lastClearedTime && (daysUntilExpiry <= 0 || daysUntilExpiry <= 2)) {
                 notifications.push({
                     id: `expiring-${item.id}`,
                     type: daysUntilExpiry <= 0 ? 'expired' : 'expiring',
@@ -432,26 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 badge.style.display = 'none';
             }
         }
-    }
-
-    function deleteAllNotifications() {
-        // Clear notifications from localStorage
-        localStorage.removeItem('notifications');
-        
-        // Clear notifications list in the UI
-        const notificationsList = document.querySelector('.notifications-list');
-        notificationsList.innerHTML = `
-            <div class="notifications-empty">
-                <i class="bi bi-bell-slash"></i>
-                <p>No notifications to display</p>
-            </div>
-        `;
-
-        // Update notification badge
-        updateNotificationBadge();
-
-        // Reload notifications for new items only
-        loadNotifications();
     }
 
     // Initialize notifications when the page loads
